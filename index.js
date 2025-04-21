@@ -127,12 +127,15 @@ function stepRoom(room) {
 
 // формируем состояние, которое уйдёт на клиент
 function exportState(room) {
+    const players = Object.entries(room.players)
+        .map(([id, p]) => ({ id, ...p }));   // теперь каждый объект имеет поле id
     return {
-        players: Object.values(room.players),
+        players,
         bots: room.bots,
         pellets: room.pellets
     };
 }
+
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Listening on ${PORT}`));
