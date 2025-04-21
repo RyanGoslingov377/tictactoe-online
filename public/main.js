@@ -65,3 +65,27 @@ function drawCircle(x, y, r, color) {
     ctx.fillStyle = color;
     ctx.fill();
 }
+
+// —————————————— чат ——————————————
+
+const messages = document.getElementById('messages');
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
+const yourName = prompt('Как вас зовут в чате?', 'Player');
+
+// отменяем сабмит формы
+chatForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+    socket.emit('chatMessage', { roomId: room, name: yourName, text });
+    chatInput.value = '';
+});
+
+// когда сервер рассылает чужое сообщение — показываем его
+socket.on('chatMessage', ({ name, text }) => {
+    const div = document.createElement('div');
+    div.textContent = `${name}: ${text}`;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+});
