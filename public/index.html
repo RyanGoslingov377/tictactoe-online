@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Крестики‑Нолики Онлайн</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+        }
+
+        #board {
+            display: grid;
+            grid-template: repeat(3, 100px)/repeat(3, 100px);
+            gap: 5px;
+            margin: 20px auto;
+        }
+
+        .cell {
+            background: #f0f0f0;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .cell:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Крестики‑Нолики Онлайн</h1>
+    <div>
+        Комната: <input id="roomId" value="room1" />
+        <button id="joinBtn">Войти</button>
+    </div>
+    <div id="status"></div>
+    <div id="board"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>
