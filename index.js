@@ -39,6 +39,11 @@ io.on('connection', socket => {
         p.dx = vec.x; p.dy = vec.y;
     });
 
+    // relay chat
+    socket.on('chatMessage', ({ roomId, name, text }) => {
+        io.to(roomId).emit('chatMessage', { name, text });
+    });
+
     socket.on('disconnect', () => {
         const room = findRoom(socket);
         if (room) delete room.players[socket.id];
