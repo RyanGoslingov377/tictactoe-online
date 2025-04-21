@@ -23,19 +23,31 @@ socket.on('joined', data => {
 socket.on('world', s => {
     state = s;
     if (!you) {
-        // найдём себя в списке игроков
         you = state.players.find(p => p.id === socket.id);
     }
-    draw();
+    // draw() здесь больше не вызываем
 });
 
-// управление мышью
+// Теперь внизу main.js добавь:
+function loop() {
+    if (state && you) draw();
+    requestAnimationFrame(loop);
+}
+loop();
+
+
+// новый вариант — не чаще чем каждые 50 мс
+let lastEmit = 0;
 canvas.addEventListener('mousemove', e => {
-    // вектор относительно центра экрана
+    const now = Date.now();
+    if (now - lastEmit < 50) return;
+    lastEmit = now;
+
     const vx = e.clientX - canvas.width / 2;
     const vy = e.clientY - canvas.height / 2;
     socket.emit('move', { x: vx, y: vy });
 });
+
 
 // отрисовка
 function draw() {
