@@ -1,37 +1,67 @@
 const socket = io();
-let playerSymbol, currentGame;
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let world, you, state;
 
-const boardEl = document.getElementById('board');
-const statusEl = document.getElementById('status');
-const roomInput = document.getElementById('roomId');
-document.getElementById('joinBtn').onclick = () => {
-    const room = roomInput.value.trim();
-    if (room) socket.emit('joinGame', room);
-};
+// размер Canvas под окно
+function resize() {
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
 
-for (let i = 0; i < 9; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.dataset.index = i;
-    cell.onclick = () => {
-        if (currentGame?.turn === playerSymbol) {
-            socket.emit('makeMove', { roomId: roomInput.value, index: i, player: playerSymbol });
-        }
-    };
-    boardEl.appendChild(cell);
+// подключаемся
+const room = prompt('Room?', 'room1');
+socket.emit('join', room);
+
+socket.on('joined', data => {
+    world = data.world;
+    you = null;
+});
+
+socket.on('world', s => {
+    state = s;
+    if (!you) {
+        // найдём себя в списке игроков
+        you = state.players.find(p => p.id === socket.id);
+    }
+    draw();
+});
+
+// управление мышью
+canvas.addEventListener('mousemove', e => {
+    // вектор относительно центра экрана
+    const vx = e.clientX - canvas.width / 2;
+    const vy = e.clientY - canvas.height / 2;
+    socket.emit('move', { x: vx, y: vy });
+});
+
+// отрисовка
+function draw() {
+    if (!state) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // камера: смещение чтобы ты был в центре
+    const camX = you.x - canvas.width / 2;
+    const camY = you.y - canvas.height / 2;
+
+    // рисуем пеллеты
+    state.pellets.forEach(p => {
+        drawCircle(p.x - camX, p.y - camY, p.mass, p.color);
+    });
+    // боты
+    state.bots.forEach(b => {
+        if (b.mass > 0) drawCircle(b.x - camX, b.y - camY, b.mass, b.color);
+    });
+    // игроки
+    state.players.forEach(p => {
+        drawCircle(p.x - camX, p.y - camY, p.mass, p.color);
+    });
 }
 
-socket.on('playerAssignment', sym => {
-    playerSymbol = sym;
-    statusEl.textContent = `Вы — ${sym}`;
-});
-
-socket.on('gameState', game => {
-    currentGame = game;
-    game.board.forEach((v, i) => boardEl.children[i].textContent = v || '');
-    if (game.board.every(c => c)) {
-        statusEl.textContent = 'Ничья!';
-    } else {
-        statusEl.textContent = game.turn === playerSymbol ? 'Ваш ход' : 'Ожидайте';
-    }
-});
+function drawCircle(x, y, r, color) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+}
